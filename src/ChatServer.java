@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,6 +10,7 @@ public class ChatServer
 	private final int port = 5000;
 	
 	private ArrayList<PrintWriter> clientOutputStreams;
+	private ServerSocket serverSock;
 	
 	public void go()
 	{
@@ -16,23 +18,34 @@ public class ChatServer
 		
 		try
 		{
-			ServerSocket serverSock = new ServerSocket(this.port);
+			this.serverSock = new ServerSocket(this.port);
 			
 			while (true)
 			{
-				Socket clientSocket = serverSock.accept();
+				Socket clientSocket = this.serverSock.accept();
 				PrintWriter writer =  new PrintWriter(clientSocket.getOutputStream());
 				this.clientOutputStreams.add(writer);
 				
 				Thread t = new Thread(new ClientHandler(clientSocket, this.clientOutputStreams));
 				t.start();
 				
-				System.out.println("Got a connection from " + clientSocket.getLocalAddress().toString() + " !");
+				System.out.println("Got a connection from " + clientSocket.getInetAddress().toString() + " !");
 			}
 		}
 		catch (Exception ex)
 		{
 			ex.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				this.serverSock.close();
+			}
+			catch (IOException ex)
+			{
+				ex.printStackTrace();
+			}
 		}
 	}
 	
@@ -49,6 +62,7 @@ public class ChatServer
 				try
 				{
 					PrintWriter writer = it.next();
+					
 					writer.println(msg);
 					writer.flush();
 				}
