@@ -1,23 +1,23 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import Models.Message;
+
 public class ClientHandler extends ChatServer implements Runnable
 {
-	private BufferedReader reader;
 	private Socket sock;
-	private ArrayList<PrintWriter> clientOutputStreams;
+	private ArrayList<ObjectOutputStream> clientOutputStreamList;
+	private ObjectInputStream inputStream;
 
-	public ClientHandler(Socket clientSocket, ArrayList<PrintWriter> clientOutputStreams)
+	public ClientHandler(Socket clientSocket, ArrayList<ObjectOutputStream> clientOutputStreamList)
 	{
 		try
 		{	
-			this.clientOutputStreams = clientOutputStreams;
+			this.clientOutputStreamList = clientOutputStreamList;
 			this.sock = clientSocket;
-			InputStreamReader isReader = new InputStreamReader(this.sock.getInputStream());
-			this.reader = new BufferedReader(isReader);
+			this.inputStream = new ObjectInputStream(this.sock.getInputStream());
 		}
 		catch (Exception ex)
 		{
@@ -28,14 +28,15 @@ public class ClientHandler extends ChatServer implements Runnable
 	@Override
 	public void run()
 	{
-		String msg;
+		Message msg;
 		
 		try
 		{
-			while ((msg = this.reader.readLine()) != null)
+			
+			while ((msg = (Message) this.inputStream.readObject()) != null)
 			{
 				System.out.println("Read: " + msg);
-				this.tellEveryone(msg, this.clientOutputStreams);
+				this.tellEveryone(msg, this.clientOutputStreamList);
 			}
 		}
 		catch (Exception ex)

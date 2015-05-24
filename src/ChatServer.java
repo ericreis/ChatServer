@@ -1,20 +1,24 @@
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import Models.Message;
+
 public class ChatServer
 {
 	private final int port = 5000;
 	
-	private ArrayList<PrintWriter> clientOutputStreams;
+//	private ArrayList<PrintWriter> clientOutputStreams;
+	private ArrayList<ObjectOutputStream> clientOutputStreamList;
 	private ServerSocket serverSock;
 	
 	public void go()
 	{
-		this.clientOutputStreams = new ArrayList<PrintWriter>();
+		this.clientOutputStreamList = new ArrayList<ObjectOutputStream>();
 		
 		try
 		{
@@ -23,10 +27,11 @@ public class ChatServer
 			while (true)
 			{
 				Socket clientSocket = this.serverSock.accept();
-				PrintWriter writer =  new PrintWriter(clientSocket.getOutputStream());
-				this.clientOutputStreams.add(writer);
+				ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream());
+//				PrintWriter writer =  new PrintWriter(clientSocket.getOutputStream());
+				this.clientOutputStreamList.add(outputStream);
 				
-				Thread t = new Thread(new ClientHandler(clientSocket, this.clientOutputStreams));
+				Thread t = new Thread(new ClientHandler(clientSocket, this.clientOutputStreamList));
 				t.start();
 				
 				System.out.println("Got a connection from " + clientSocket.getInetAddress().toString() + " !");
@@ -49,22 +54,22 @@ public class ChatServer
 		}
 	}
 	
-	protected void tellEveryone(String msg, ArrayList<PrintWriter> clientOutputStreams)
+	protected void tellEveryone(Message msg, ArrayList<ObjectOutputStream> clientOutputStreamList)
 	{	
-		this.clientOutputStreams = clientOutputStreams;
+		this.clientOutputStreamList = clientOutputStreamList;
 		
 		try
 		{
-			Iterator<PrintWriter> it = this.clientOutputStreams.iterator();
+			Iterator<ObjectOutputStream> it = this.clientOutputStreamList.iterator();
 			
 			while (it.hasNext())
 			{
 				try
 				{
-					PrintWriter writer = it.next();
+					ObjectOutputStream outputStream = it.next();
 					
-					writer.println(msg);
-					writer.flush();
+					outputStream.writeObject(msg);;
+					outputStream.flush();
 				}
 				catch (Exception ex)
 				{
