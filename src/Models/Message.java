@@ -13,7 +13,6 @@ public class Message implements Serializable
 	public Message(String content, Date date)
 	{
 		this.content = content;
-		this.user = "";
 		this.date = date;
 	}
 	

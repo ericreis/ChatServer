@@ -35,7 +35,6 @@ public class ClientHandler extends ChatServer implements Runnable
 			
 			while ((msg = (Message) this.inputStream.readObject()) != null)
 			{
-				System.out.println("Read: " + msg.toString());
 				this.tellEveryone(msg, this.clientOutputStreamList);
 			}
 		}
